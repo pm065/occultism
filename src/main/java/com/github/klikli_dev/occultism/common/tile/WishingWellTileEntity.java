@@ -71,6 +71,7 @@ public class WishingWellTileEntity extends NetworkedTileEntity implements ITicka
     protected WishingWellSacrificeRecipe currentSacrificeRecipe;
     protected int currentItemDissolveTicks;
     protected ItemStackFakeInventory sacrificeFakeInventory = new ItemStackFakeInventory(ItemStack.EMPTY);
+    protected ItemStackFakeInventory growingFakeInventory = new ItemStackFakeInventory(ItemStack.EMPTY);
 
     protected float earthEssence;
     protected float airEssence;
