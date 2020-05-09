@@ -28,16 +28,20 @@ import com.github.klikli_dev.occultism.crafting.recipe.WishingWellSacrificeRecip
 import com.github.klikli_dev.occultism.registry.OccultismBlocks;
 import com.github.klikli_dev.occultism.registry.OccultismRecipes;
 import com.github.klikli_dev.occultism.registry.OccultismTiles;
+import com.github.klikli_dev.occultism.util.Math3DUtil;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.common.util.Constants;
 
 import java.util.ArrayDeque;
+import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ThreadLocalRandom;
@@ -45,6 +49,11 @@ import java.util.stream.Collectors;
 
 public class WishingWellTileEntity extends NetworkedTileEntity implements ITickableTileEntity {
     //region Fields
+    /**
+     * The offset for the block to check for items to grow.
+     */
+    protected static final BlockPos GROWING_BLOCK_OFFSET = new BlockPos(0, 1, 0);
+
     /**
      * Can be outdated, is updated every 40-60 seconds.
      */
@@ -112,10 +121,14 @@ public class WishingWellTileEntity extends NetworkedTileEntity implements ITicka
         }
 
         if (this.hasValidMultiblock) {
+
+            //Item dissolving
+            //get an item to dissolve
             if (this.currentItemToDissolve.isEmpty() && !this.itemsToDissolve.isEmpty()) {
                 this.currentItemToDissolve = this.itemsToDissolve.poll();
             }
 
+            //if we have an item, continuie dissolving it
             if (!this.currentItemToDissolve.isEmpty()) {
                 if (this.currentSacrificeRecipe == null) {
                     this.findRecipe(this.currentItemToDissolve)
@@ -143,6 +156,15 @@ public class WishingWellTileEntity extends NetworkedTileEntity implements ITicka
                             this.currentItemToDissolve.getItem().getRegistryName());
                 }
             }
+
+            //Grow items
+            //TODO: every X ticks, query for current growables
+            Vec3d growingBlockCenter = Math3DUtil.center(pos.add(GROWING_BLOCK_OFFSET));
+            AxisAlignedBB growingBox = new AxisAlignedBB(-0.5, -0.5, -0.5, 0.5, 0.5, 0.5).offset(growingBlockCenter);
+            List<ItemEntity> growingBoxEntities = world.getEntitiesWithinAABB(ItemEntity.class, growingBox);
+            //TODO: query growing recipes for the growables, and cache recpies
+            //TODO: apply growing recipes over time -> probalby need a struct for recipe + current time and resources
+            //TODO: actually, definitely store in nbt
         }
     }
 
