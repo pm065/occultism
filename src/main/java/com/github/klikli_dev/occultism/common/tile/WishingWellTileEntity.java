@@ -40,10 +40,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.common.util.Constants;
 
-import java.util.ArrayDeque;
-import java.util.List;
-import java.util.Optional;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -75,6 +72,11 @@ public class WishingWellTileEntity extends NetworkedTileEntity implements ITicka
      * The queue of item stacks to dissolve over time.
      */
     protected Queue<ItemStack> itemsToDissolve = new ArrayDeque<>();
+
+    /**
+     * The list of item entities to grow over time.
+     */
+    protected List<ItemEntity> itemsToGrow = new ArrayList<>();
 
     protected ItemStack currentItemToDissolve = ItemStack.EMPTY;
     protected WishingWellSacrificeRecipe currentSacrificeRecipe;
@@ -158,13 +160,21 @@ public class WishingWellTileEntity extends NetworkedTileEntity implements ITicka
             }
 
             //Grow items
-            //TODO: every X ticks, query for current growables
-            Vec3d growingBlockCenter = Math3DUtil.center(pos.add(GROWING_BLOCK_OFFSET));
-            AxisAlignedBB growingBox = new AxisAlignedBB(-0.5, -0.5, -0.5, 0.5, 0.5, 0.5).offset(growingBlockCenter);
-            List<ItemEntity> growingBoxEntities = world.getEntitiesWithinAABB(ItemEntity.class, growingBox);
-            //TODO: query growing recipes for the growables, and cache recpies
-            //TODO: apply growing recipes over time -> probalby need a struct for recipe + current time and resources
-            //TODO: actually, definitely store in nbt
+            //Every two seconds query currently available item entities
+            if (this.world.getGameTime() % (20 * 2) == 0) {
+                Vec3d growingBlockCenter = Math3DUtil.center(pos.add(GROWING_BLOCK_OFFSET));
+                AxisAlignedBB growingBox = new AxisAlignedBB(-0.5, -0.5, -0.5, 0.5, 0.5, 0.5).offset(growingBlockCenter);
+                List<ItemEntity> growingBoxEntities = world.getEntitiesWithinAABB(ItemEntity.class, growingBox);
+
+
+                for(ItemEntity itemEntity : growingBoxEntities){
+                    itemEntity.setNoDespawn();
+
+                    //TODO: store items already in itemsToGrow as well as all new items that have a recipe in a new list
+                    //      then set the new list as itemsToGrow.
+                    //TODO: store the recipes at the same index in a second list
+                }
+            }
         }
     }
 
